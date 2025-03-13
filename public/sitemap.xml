@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:mobile="http://www.google.com/schemas/sitemap-mobile/1.0" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
+<url> <loc>https://learni-fyai.web.app/</loc> </url>
+<url> <loc>https://learni-fyai.web.app/signup</loc> </url>
+<url> <loc>https://learni-fyai.web.app/signin</loc> </url>
+<url> <loc>https://learni-fyai.web.app/forgot-password</loc> </url>
+<url> <loc>https://learni-fyai.web.app/reset-password</loc> </url>
+<url> <loc>https://learni-fyai.web.app/email-verification</loc> </url>
+<url> <loc>https://learni-fyai.web.app/email-verification-sent</loc> </url>
+<url> <loc>https://learni-fyai.web.app/email-verification-success</loc> </url>
+<url> <loc>https://learni-fyai.web.app/email-verification-failure</loc> </url>
+</urlset>
