@@ -70,7 +70,7 @@ const ThoughtInput = ({ onSend }) => {
   const dynamicHeight = `${lines * 1.5}rem`;
 
   return (
-    <div className="flex flex-col p-4 gap-4 bg-[#f7f7f8] rounded-md w-full max-w-[800px] mb-6 mx-auto border border-gray-200 sticky bottom-2 shadow-sm">
+    <div className="flex flex-col px-4 pb-2 gap-4 bg-[#f7f7f8] rounded-md w-full mx-auto border border-gray-200 shadow-sm">
       {/* Attachments Preview */}
       {attachments.length > 0 && (
         <div className="flex flex-wrap gap-2 mt-2">
@@ -105,7 +105,7 @@ const ThoughtInput = ({ onSend }) => {
       <div className="flex items-start space-x-3 py-4">
         <img src={brain} alt="Brain Icon" className="w-6 h-6 mt-1" />
         <textarea
-          className="w-full bg-transparent resize-none outline-none text-lg text-[1rem] chat-input-area form-input placeholder:text-slate-400/70"
+          className="w-full bg-transparent resize-none outline-none text-lg text-[12px] sm:text-[14px] chat-input-area form-input placeholder:text-slate-400/70"
           placeholder="What’s on your mind?..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -127,8 +127,10 @@ const ThoughtInput = ({ onSend }) => {
       </div>
 
       {/* Icons */}
-      <div className="flex items-center space-x-4 text-gray-400">
+      <div className="flex w-full items-center justify-between space-x-4 text-gray-400">
         {/* Image Upload Button */}
+        <div className="flex gap-4">
+
         <button
           onClick={() => fileInputRef.current.click()}
           className="hover:text-gray-600"
@@ -158,15 +160,17 @@ const ThoughtInput = ({ onSend }) => {
           onChange={handleDocUpload}
           className="hidden"
         />
+        </div>
+
+        {/* Send Button */}
+        <button
+          onClick={handleSend}
+          className="bg-gradient-to-r justify-end from-[#632366] to-[#44798E] text-white p-2 rounded-full shadow-md hover:scale-105 transition-transform"
+        >
+          <Send size={18} />
+        </button>
       </div>
 
-      {/* Send Button */}
-      <button
-        onClick={handleSend}
-        className="absolute right-4 bottom-4 bg-gradient-to-r from-[#632366] to-[#44798E] text-white p-2 rounded-full shadow-md hover:scale-105 transition-transform"
-      >
-        <Send size={18} />
-      </button>
     </div>
   );
 };

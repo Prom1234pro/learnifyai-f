@@ -1,16 +1,16 @@
 /* eslint-disable react/prop-types */
 import { useEffect, useState } from "react";
-import { Menu, X, Search, Plus, Edit, LogOut } from "lucide-react";
+import { Search, Plus, Edit, LogOut } from "lucide-react";
 import ActionButton from "./Buttons/ActionButton";
 import Logo from "../assets/logo.png";
+import menuIcon from "../assets/menu.svg";
 import { auth } from '../firebase';
 import { Link, useNavigate } from 'react-router-dom';
 import { db } from '../firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import { signOut } from "firebase/auth";
 
-const Sidebar = ({ chats }) => {
-  const [isOpen, setIsOpen] = useState(false);
+const Sidebar = ({ chats, isOpen, setIsOpen }) => {
   const [search, setSearch] = useState("");
   const [editingChatId, setEditingChatId] = useState(null);
   const [editName, setEditName] = useState("");
@@ -122,12 +122,12 @@ const Sidebar = ({ chats }) => {
 
   return (
     <>
-      <button
+      {/* <button
         onClick={() => setIsOpen(!isOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 text-black p-2 rounded-md"
+        className="lg:hidden fixed top-[-5px] left-4 z-50 text-black p-2 rounded-md"
       >
-        {isOpen ? <X size={24} /> : <Menu size={24} />}
-      </button>
+        {!isOpen && <img width={40} height={40} src={menuIcon}/>}
+      </button> */}
 
       <div
         className={`fixed h-screen top-0 left-0 bg-gradient-to-br from-[#E5E7EA] to-[#A362A880] py-4 border-r shadow-lg w-72 transition-transform ${
@@ -138,11 +138,12 @@ const Sidebar = ({ chats }) => {
 
         <div className="sticky px-6 top-0 left-0 z-10 h-[20%]">
 
-          <div className="flex items-center mb-4 gap-3">
-            <img src={Logo} alt="AI Icon" className="w-12 h-12" />
-            <span className="font-montserrat bg-gradient-to-r from-[#632366] to-[#44798E] bg-clip-text text-transparent ml-2 text-xl font-semibold">
+          <div className="flex items-center mb-4 gap-[1px] relative">
+            <img src={Logo} alt="AI Icon" className="w-9 h-9" />
+            <span className="font-montserrat bg-gradient-to-r from-[#632366] to-[#44798E] bg-clip-text text-transparent ml-2 text-[24px] font-[700]">
               LEARNIFY AI
             </span>
+            <img className="lg:hidden absolute right-0" width={35} height={35} src={menuIcon} onClick={() => setIsOpen(!isOpen)}/>
           </div>
 
           <div className="relative w-full max-w-sm mb-4">
@@ -163,7 +164,7 @@ const Sidebar = ({ chats }) => {
             <ActionButton icon={Plus} active text="New Chat" onClick={() => navigate("/chat")} className={"py-[0.4rem]"} />
           </div>
 
-          <div className="space-y-4 mt-7 px-6 h-[80%] overflow-y-scroll z-50 relative">
+          <div className="space-y-4 mt-7 px-6 h-[60vh] overflow-y-scroll z-50 relative">
             {categoryOrder.filter(category => categorizedChats[category].length > 0).length > 0 ? (
               categoryOrder
                 .filter(category => categorizedChats[category].length > 0)

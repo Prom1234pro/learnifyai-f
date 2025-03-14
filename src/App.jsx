@@ -30,17 +30,14 @@ const App = () => {
           <Route 
             path="/chat" 
             element={
-              <ProtectedRoute>
-                <NewChat />
-              </ProtectedRoute>
+              <ProtectedRoute Child={NewChat}/>
+                 
             } 
           />
           <Route 
             path="/chat/:id" 
             element={
-              <ProtectedRoute>
-                <Chat />
-              </ProtectedRoute>
+              <ProtectedRoute Child={Chat}/>
             } 
           />
           {/* <Route 

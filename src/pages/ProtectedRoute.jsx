@@ -7,8 +7,9 @@ import { db } from '../firebase';
 import { collection, onSnapshot } from 'firebase/firestore';
 
 // eslint-disable-next-line react/prop-types
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = ({ Child }) => {
   const [loading, setLoading] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate()
   const [user, setUser] = useState(null);
 
@@ -59,9 +60,9 @@ const ProtectedRoute = ({ children }) => {
 
   return (
     <div className="flex h-screen">
-      <Sidebar chats={chatSessions}/>
+      <Sidebar chats={chatSessions} isOpen={isOpen} setIsOpen={setIsOpen}/>
       
-      {!loading && children}
+      {!loading && <Child isOpen={isOpen} setIsOpen={setIsOpen}/>}
     </div>
   );;
 };

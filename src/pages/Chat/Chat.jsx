@@ -1,13 +1,15 @@
 import { useState, useEffect } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import ThoughtInput from "../../components/ChatComponent/ThoughtInput";
+import Header from "../../components/Header";
 import ChatMessage from "../../components/ChatComponent/ChatMessage";
 import UserChatMessage from "../../components/ChatComponent/UserChatMessage";
 import { db } from "../../firebase";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 
-const Chat = () => {
+// eslint-disable-next-line react/prop-types
+const Chat = ({isOpen, setIsOpen}) => {
   const { id } = useParams();
   const location = useLocation();
   const state = location.state || {};
@@ -15,6 +17,7 @@ const Chat = () => {
   const [messages, setMessages] = useState([]);
   const [typingMessageId, setTypingMessageId] = useState(null);
   const [userName, setUserName] = useState("Promise"); // Default username
+  const [title, setTitle] = useState("Learnify AI"); // Default username
   const [userInitials, setUserInitials] = useState("PR"); // Default initials
   const [userPhoto, setUserPhoto] = useState(null); // User profile photo
 
@@ -50,6 +53,7 @@ const Chat = () => {
 
       if (chatSnap.exists()) {
         setMessages(chatSnap.data().messages || []);
+        setTitle(chatSnap.data().name || "Learnify AI");
       } else if (state?.initialMessage) {
         setTypingMessageId(1);
         let initialMessages = state.isSummary
@@ -60,6 +64,7 @@ const Chat = () => {
             ];
 
         await setDoc(chatDoc, { messages: initialMessages, updatedAt: new Date().toISOString(), name: state?.name });
+        setTitle(state?.name || "Learnify AI")
         setMessages(initialMessages);
       }
     };
@@ -110,25 +115,19 @@ const Chat = () => {
     }
   };
 
+  useEffect(() => {
+    document.title = title; // Change the title
+
+    return () => {
+      document.title = "Learnify AI"; // Optional cleanup when component unmounts
+    };
+  }, [title]);
+
   return (
     <div className="flex-1 h-screen flex flex-col bg-gradient-to-br from-[#ffffff] via-[#e7dbe9ac] to-[#A362A880] relative">
-      <div className="absolute top-2 right-0 -translate-x-8 flex items-center px-3 py-1 rounded-full bg-gradient-to-r from-[#632366] to-[#44798E] text-white text-sm font-normal">
-        <span className="mr-2">{userName}</span>
-        {userPhoto? (
-          <img
-            src={userPhoto}
-            alt="User Profile"
-            className="w-6 h-6 rounded-full object-cover"
-          />
-        ) : (
-          <span className="w-6 h-6 p-4 flex items-center justify-center rounded-full bg-gradient-to-r from-[#632366] to-[#44798E] text-xs font-bold">
-            {userInitials}
-          </span>
-        )}
-      </div>
-
+      <Header isOpen={isOpen} setIsOpen={setIsOpen}/>
       {/* Chat Messages (Scrollable Area) */}
-      <div className="flex-1 h-screen overflow-y-auto p-4 space-y-4 lg:pt-[6rem] lg:pl-40 lg:pr-48 md:px-28 pt-[4rem] px-6">
+      <div className="h-[80vh] overflow-y-auto p-4 space-y-4 lg:pt-[6rem] lg:pl-40 lg:pr-48 md:px-28 pt-[4rem] px-6">
         {messages.map((msg, index) => (
           <div key={index} className={`flex ${msg.user === "User 2" ? "justify-end" : "justify-start"}`}>
             {msg.user === "User 2" ? (
@@ -147,7 +146,7 @@ const Chat = () => {
       </div>
 
       {/* Input Field */}
-      <div className="lg:pl-40 lg:pr-48 md:px-28 px-6 w-full absolute bottom-0">
+      <div className="lg:pl-40 lg:pr-48 md:px-28 px-0 w-full absolute bottom-0">
         <ThoughtInput onSend={(message) => addMessage(message, "User 2")} />
       </div>
     </div>

@@ -215,7 +215,7 @@ export default function SignUp() {
       <div className="flex h-screen overflow-y-scroll bg-gradient-to-r from-purple-100 to-white">
         
         {/* Left Section - Sign Up Form */}
-        <div className="w-full lg:w-1/2 flex items-center justify-center p-12">
+        <div className="w-full lg:w-1/2 flex items-center justify-center pt-28">
         
           <div className="max-w-md w-full">
           <div className="flex items-center mb-4 gap-3">

@@ -3,41 +3,32 @@ import document from "../../assets/document.svg";
 import image from "../../assets/image.svg";
 import logo from "../../assets/logo.png";
 import ThoughtInput from "../../components/ChatComponent/ThoughtInput";
+import Header from "../../components/Header";
 import UploadDocument from "../../components/ChatComponent/UploadDocument";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 
-const NewChat = () => {
+// eslint-disable-next-line react/prop-types
+const NewChat = ({isOpen, setIsOpen}) => {
   const [isDocumentModalOpen, setIsDocumentModalOpen] = useState(false);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
-  const [userName, setUserName] = useState("Anonymous"); // Default username
-  const [userInitials, setUserInitials] = useState("AN"); // Default initials
-  const [userPhoto, setUserPhoto] = useState(null); // User profile photo
+  const [userName, setUserName] = useState("Anonymous");
   useEffect(() => {
     const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         // setUserId(user.uid);
         setUserName(user.displayName || "Anonymous"); // Use displayName from Firebase Auth
-        setUserPhoto(user.photoURL || null); // Use photoURL from Firebase Auth if available
-        
-        // Generate initials from displayName if no photo is available
-        if (user.displayName) {
-          const initials = user.displayName
-            .split(" ")
-            .map((name) => name[0])
-            .join("")
-            .slice(0, 2)
-            .toUpperCase();
-          setUserInitials(initials);
-        }
       }
     });
     return () => unsubscribe(); // Cleanup subscription
   }, []);
-
+  
   return (
-    <div className="flex-1 flex flex-col items-start sm:items-center bg-gradient-to-br from-[#ffffff] via-[#e7dbe9ac] to-[#A362A880] lg:pt-[6rem] pt-[5rem] px-2 relative">
-      <div className="absolute top-2 right-0 -translate-x-8 flex items-center px-3 py-1 rounded-full bg-gradient-to-r from-[#632366] to-[#44798E] text-white text-sm font-normal">
+    <div className="flex-1 bg-gradient-to-br from-[#ffffff] via-[#e7dbe9ac] to-[#A362A880] relative" >
+
+    <Header isOpen={isOpen} setIsOpen={setIsOpen}/>
+    <div className="flex flex-col items-start sm:items-center lg:pt-[2rem] pt-[5rem] px-2">
+      {/* <div className="absolute top-2 right-0 -translate-x-8 flex items-center px-3 py-1 rounded-full bg-gradient-to-r from-[#632366] to-[#44798E] text-white text-sm font-normal">
         <span className="mr-2">{userName}</span>
         {userPhoto? (
           <img
@@ -50,7 +41,7 @@ const NewChat = () => {
             {userInitials}
           </span>
         )}
-      </div>
+      </div> */}
       <div className="flex flex-col w-full sm:text-center">
         <div className="flex items-center justify-center w-full">
           <div className="relative flex items-center justify-center w-24 h-24">
@@ -92,10 +83,12 @@ const NewChat = () => {
       {/* Chat Input */}
       <UploadDocument isOpen={isDocumentModalOpen} setIsOpen={setIsDocumentModalOpen} title={"Document Upload"}  supportedMedia={"Only supports PDF, DOC, DOCX, TXT"}/>
       <UploadDocument isOpen={isImageModalOpen} setIsOpen={setIsImageModalOpen} title={"Image Upload"} supportedMedia={"Only supports JPG, PNG, GIF"}/>
-      <div className="lg:w-[90%] w-[95%] bottom-0 absolute">
-      <ThoughtInput />
+    </div>
+      <div className="sm:w-[90%] w-[100%] bottom-0 absolute sm:mt-2 sm:static mx-auto">
+        <ThoughtInput />
       </div>
     </div>
+
   );
 };
   
