@@ -5,7 +5,7 @@ import ActionButton from "./Buttons/ActionButton";
 import Logo from "../assets/logo.png";
 import menuIcon from "../assets/menu.svg";
 import { auth } from '../firebase';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { db } from '../firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import { signOut } from "firebase/auth";
@@ -120,6 +120,11 @@ const Sidebar = ({ chats, isOpen, setIsOpen }) => {
     }
   };
 
+  const handleClickLink = (url) => {
+    navigate(url);
+    setIsOpen(false)
+  }
+
   return (
     <>
       {/* <button
@@ -128,11 +133,15 @@ const Sidebar = ({ chats, isOpen, setIsOpen }) => {
       >
         {!isOpen && <img width={40} height={40} src={menuIcon}/>}
       </button> */}
+        {isOpen && <div onClick={()=>setIsOpen(false)} className="lg:hidden w-screen h-screen z-[500] fixed top-0 opacity-[0.6] bg-[#E5E7EA]">
 
+</div>}
+
+      
       <div
-        className={`fixed h-screen top-0 left-0 bg-gradient-to-br from-[#E5E7EA] to-[#A362A880] py-4 border-r shadow-lg w-72 transition-transform ${
+        className={`fixed h-full top-0 left-0 bg-gradient-to-br from-[#E5E7EA] to-[#A362A880] py-4 border-r shadow-lg w-72 transition-transform ${
           isOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:w-72 lg:translate-x-0 lg:static lg:flex flex-col z-40`}
+        } lg:w-72 lg:translate-x-0 lg:static lg:flex flex-col z-[999]`}
       >
 
 
@@ -161,10 +170,10 @@ const Sidebar = ({ chats, isOpen, setIsOpen }) => {
           </div>
         </div>
           <div className="px-6">
-            <ActionButton icon={Plus} active text="New Chat" onClick={() => navigate("/chat")} className={"py-[0.4rem]"} />
+            <ActionButton icon={Plus} active text="New Chat" onClick={() => handleClickLink("/chat")} className={"py-[0.4rem]"} />
           </div>
 
-          <div className="space-y-4 mt-7 px-6 h-[60vh] overflow-y-scroll z-50 relative">
+          <div className="space-y-4 mt-7 px-6 h-[50vh] overflow-y-scroll z-50 relative">
             {categoryOrder.filter(category => categorizedChats[category].length > 0).length > 0 ? (
               categoryOrder
                 .filter(category => categorizedChats[category].length > 0)
@@ -192,8 +201,8 @@ const Sidebar = ({ chats, isOpen, setIsOpen }) => {
                               />
                             ) : (
                               <>
-                                <Link 
-                                  to={`/chat/${chat.id}`} 
+                                <div 
+                                onClick={()=> handleClickLink(`/chat/${chat.id}`)}
                                   className="flex-1 truncate"
                                   style={{ 
                                     display: 'block', 
@@ -203,7 +212,7 @@ const Sidebar = ({ chats, isOpen, setIsOpen }) => {
                                   }}
                                 >
                                   {chat.name}
-                                </Link>
+                                </div>
                                 <button
                                   onClick={() => handleEdit(chat.id, chat.name)}
                                   className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:text-gray-600"

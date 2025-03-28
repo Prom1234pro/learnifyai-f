@@ -212,12 +212,12 @@ export default function SignUp() {
     };
     
     return (
-      <div className="flex h-screen overflow-y-scroll bg-gradient-to-r from-purple-100 to-white">
+      <div className="lg:flex h-screen w-full bg-gradient-to-r from-purple-100 to-white">
         
         {/* Left Section - Sign Up Form */}
-        <div className="w-full lg:w-1/2 flex items-center justify-center pt-28">
+        <div className="w-full h-full overflow-y-scroll lg:w-1/2 py-24 mx-2">
         
-          <div className="max-w-md w-full">
+          <div className="max-w-md w-full mx-auto">
           <div className="flex items-center mb-4 gap-3">
               <img src={Logo} alt="AI Icon" className="w-12 h-12" />
               <span className="font-montserrat bg-gradient-to-r from-[#632366] to-[#44798E] bg-clip-text text-transparent ml-2 text-xl md:text-2xl font-[700]">LEARNIFY AI</span>

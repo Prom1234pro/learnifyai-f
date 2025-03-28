@@ -29,7 +29,7 @@ const [userName, setUserName] = useState("Anonymous"); // Default username
     return () => unsubscribe(); // Cleanup subscription
   }, []);
   return (
-    <div className="flex justify-between pr-2 mt-2">
+    <div className="flex justify-between pr-2 mt-2 py-2 sm:bg-none bg-gradient-to-br from-[#ffffff] via-[#f1e7f3] to-[#bb75c0] sticky sm:static top-0">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="lg:hidden z-50 text-black rounded-md"

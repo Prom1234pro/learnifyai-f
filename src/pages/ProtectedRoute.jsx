@@ -1,13 +1,15 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { auth } from '../firebase';
+import Header from "../components/Header";
+
 import { onAuthStateChanged } from 'firebase/auth';
 import Sidebar from "../components/Sidebar";
 import { db } from '../firebase';
 import { collection, onSnapshot } from 'firebase/firestore';
 
 // eslint-disable-next-line react/prop-types
-const ProtectedRoute = ({ Child }) => {
+const ProtectedRoute = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate()
@@ -62,7 +64,13 @@ const ProtectedRoute = ({ Child }) => {
     <div className="flex h-screen">
       <Sidebar chats={chatSessions} isOpen={isOpen} setIsOpen={setIsOpen}/>
       
-      {!loading && <Child isOpen={isOpen} setIsOpen={setIsOpen}/>}
+    {!loading && <div className="flex flex-col flex-1 h-full bg-gradient-to-br from-[#ffffff] via-[#e7dbe9ac] to-[#A362A880] relative" >
+      <Header isOpen={isOpen} setIsOpen={setIsOpen}/>
+      <div className="flex flex-col flex-1">
+        {children}
+      </div>
+      </div>
+    }
     </div>
   );;
 };

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 
 // eslint-disable-next-line react/prop-types
-const UserChatMessage = ({ message, timestamp, userName, userPhoto, userInitials }) => {
+const UserChatMessage = ({ msgType, fileUri, message, timestamp, userName, userPhoto, userInitials }) => {
   const messagesEndRef = useRef(null); // Reference for auto-scrolling
 
   useEffect(() => {
@@ -31,7 +31,20 @@ const UserChatMessage = ({ message, timestamp, userName, userPhoto, userInitials
         </div>
 
         {/* Message Content */}
-        <p className="text-gray-800 text-sm bg-[#E5E7EA] rounded-md p-3">{message}</p>
+        {
+          msgType === "text"? <p className="text-gray-800 text-sm bg-[#E5E7EA] rounded-md p-3">{message}</p> : 
+          msgType === "doc"?  <iframe 
+          src={fileUri} 
+          width="100%" 
+          height="500px" 
+          title="Document Preview"
+        /> : <img 
+        src={fileUri} 
+        alt="Uploaded File" 
+        style={{ maxWidth: "100%", height: "auto" }} 
+      />
+        }
+        
         <div ref={messagesEndRef} />
       </div>
     </div>

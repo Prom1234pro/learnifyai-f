@@ -1,33 +1,72 @@
 import { useState, useEffect } from "react";
-import document from "../../assets/document.svg";
-import image from "../../assets/image.svg";
+// import document from "../../assets/document.svg";
+// import image from "../../assets/image.svg";
 import logo from "../../assets/logo.png";
 import ThoughtInput from "../../components/ChatComponent/ThoughtInput";
-import Header from "../../components/Header";
-import UploadDocument from "../../components/ChatComponent/UploadDocument";
+// import UploadDocument from "../../components/ChatComponent/UploadDocument";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
 
-// eslint-disable-next-line react/prop-types
-const NewChat = ({isOpen, setIsOpen}) => {
-  const [isDocumentModalOpen, setIsDocumentModalOpen] = useState(false);
-  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+
+const NewChat = () => {
+  const [userId, setUserId] = useState(null);
+  // const [isDocumentModalOpen, setIsDocumentModalOpen] = useState(false);
+  // const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [userName, setUserName] = useState("Anonymous");
+  const navigate = useNavigate();
+
   useEffect(() => {
     const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        // setUserId(user.uid);
+        setUserId(user.uid);
         setUserName(user.displayName || "Anonymous"); // Use displayName from Firebase Auth
       }
     });
     return () => unsubscribe(); // Cleanup subscription
   }, []);
+
+   const addMessage = async (payload) => {
+      console.log(payload.message);
+      const text = payload.message;
+      if (!payload.message.trim()) return;
+  
+      const userTimestamp = new Date().toLocaleTimeString(); // User message timestamp
+  
+  
+      try {
+        const timestamp = `${Date.now()}`
+        const response = await fetch("http://127.0.0.1:5000/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_id: userId,
+            session_id: timestamp,
+            file_uris: payload.file_uris,
+            new: true,
+            message: text,
+            userTimestamp: userTimestamp, // Send user's timestamp to backend
+            updateTimestamp: new Date().toISOString(), // Send an update timestamp
+          }),
+        });
+  
+        if (!response.ok) throw new Error(`API error: ${response.statusText}`);
+  
+        const data = await response.json();
+        console.log(data)
+       
+        navigate(`/chat/${timestamp}`, {
+          state: { initialMessage: data.response, isSummary: true, title: data.title, file_uris: data.file_uris },
+        });
+
+      } catch (error) {
+        console.error("Error calling the chat API:", error);
+      }
+  };
   
   return (
-    <div className="flex-1 bg-gradient-to-br from-[#ffffff] via-[#e7dbe9ac] to-[#A362A880] relative" >
-
-    <Header isOpen={isOpen} setIsOpen={setIsOpen}/>
-    <div className="flex flex-col items-start sm:items-center lg:pt-[2rem] pt-[5rem] px-2">
+    <div className="flex h-full flex-col justify-center items-center gap-5">
+    <div className="sm:mb-0 pt-[5rem] px-2">
       {/* <div className="absolute top-2 right-0 -translate-x-8 flex items-center px-3 py-1 rounded-full bg-gradient-to-r from-[#632366] to-[#44798E] text-white text-sm font-normal">
         <span className="mr-2">{userName}</span>
         {userPhoto? (
@@ -42,7 +81,7 @@ const NewChat = ({isOpen, setIsOpen}) => {
           </span>
         )}
       </div> */}
-      <div className="flex flex-col w-full sm:text-center">
+      <div className="flex flex-col w-full text-center">
         <div className="flex items-center justify-center w-full">
           <div className="relative flex items-center justify-center w-24 h-24">
             {/* Outer Circle */}
@@ -63,7 +102,7 @@ const NewChat = ({isOpen, setIsOpen}) => {
       </div>
 
       {/* Upload Options */}
-      <div className="mt-6 flex flex-row gap-4 justify-center w-full max-w-md lg:max-w-2xl">
+      {/* <div className="mt-6 flex flex-row gap-4 justify-center w-full max-w-md lg:max-w-2xl">
         <div 
         onClick={() => setIsDocumentModalOpen(true)}
         className="cursor-pointer flex flex-col items-center py-4 px-[0.5rem] text-center border border-[#d9baf9] rounded-lg w-full lg:w-[360px]">
@@ -78,15 +117,15 @@ const NewChat = ({isOpen, setIsOpen}) => {
           <h3 className="font-semibold text-[#282A2F] text-[12px] md:text-base my-[0.6rem]">Upload Your Image</h3>
           <p className="text-[8px] md:text-sm text-[#696F79] mb-3">Choose an image to interact with. Supported formats: JPG, PNG, GIF.</p>
         </div>
-      </div>
+      </div> */}
 
       {/* Chat Input */}
-      <UploadDocument isOpen={isDocumentModalOpen} setIsOpen={setIsDocumentModalOpen} title={"Document Upload"}  supportedMedia={"Only supports PDF, DOC, DOCX, TXT"}/>
-      <UploadDocument isOpen={isImageModalOpen} setIsOpen={setIsImageModalOpen} title={"Image Upload"} supportedMedia={"Only supports JPG, PNG, GIF"}/>
+      {/* <UploadDocument isOpen={isDocumentModalOpen} setIsOpen={setIsDocumentModalOpen} title={"Document Upload"}  supportedMedia={"doc"} userId={userId} pageType={"newChat"}/>
+      <UploadDocument isOpen={isImageModalOpen} setIsOpen={setIsImageModalOpen} title={"Image Upload"} supportedMedia={"img"} userId={userId} pageType={"newChat"}/> */}
     </div>
-      <div className="sm:w-[90%] w-[100%] bottom-0 absolute sm:mt-2 sm:static mx-auto">
-        <ThoughtInput />
-      </div>
+    <div className="sm:w-[90%] w-[100%] max-w-[680px] bottom-0 absolute sm:mt-2 sm:sticky mx-auto">
+      <ThoughtInput onSend={addMessage}/>
+    </div>
     </div>
 
   );
