@@ -184,7 +184,7 @@ export default function SignIn() {
     };
     return (
 
-      <div className="flex w-full h-screen overflow-y-scroll bg-gradient-to-r from-white to-purple-100">
+      <div className="h-screen lg:flex w-full bg-gradient-to-r from-white to-purple-100">
         
         {/* Left Section - AI Assistant (Hidden on Small Screens) */}
         <div className="hidden rounded-2xl m-3 lg:flex lg:flex-col items-center w-1/2 bg-gradient-to-tr from-[#A362A880] via-[#FAFAFA] via-60% to-[#A362A880] p-12 flex-col justify-center fixed left-0 top-0 h-full">
@@ -203,13 +203,13 @@ export default function SignIn() {
 
         
         {/* Right Section - Sign In Form */}
-        <div className="w-full lg:w-1/2 flex items-center ml-auto justify-center pt-28">
+        <div className="w-full lg:w-1/2 h-full overflow-y-scroll lg:ml-auto justify-center py-24 mx-2">
         
-        <div className="max-w-md w-full">
+        <div className="max-w-md w-full mx-auto">
         <div className="flex items-center mb-4 gap-3">
             <img src={Logo} alt="AI Icon" className="w-12 h-12" />
             <span className="font-montserrat bg-gradient-to-r from-[#632366] to-[#44798E] bg-clip-text text-transparent ml-2 text-xl md:text-2xl font-[700]">LEARNIFY AI</span>
-          </div>
+        </div>
           <h1 className="text-2xl sm:text-3xl font-semibold">Welcome Back</h1>
           <p className="text-gray-600 mt-3">Kindly fill in your details to sign in</p>
           

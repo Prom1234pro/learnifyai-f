@@ -1,4 +1,5 @@
 import ProtectedRoute from './pages/ProtectedRoute';
+import PDFPage from './pages/PDF2';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import NewChat from './pages/Chat/NewChat'
 import Chat from './pages/Chat/Chat'
@@ -21,6 +22,7 @@ const App = () => {
           <Route path="/signup" element={<SignUp />}/>
           <Route path="/signin" element={<SignIn />}/>
           <Route path="/" element={<Welcome/>}/>
+          <Route path="/pdf" element={<PDFPage/>}/>
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<CreateNewPassword />} />
           <Route path="/email-verification" element={<EmailVerification />} />
@@ -30,14 +32,17 @@ const App = () => {
           <Route 
             path="/chat" 
             element={
-              <ProtectedRoute Child={NewChat}/>
-                 
+              <ProtectedRoute>
+                <NewChat />
+              </ProtectedRoute>
             } 
           />
           <Route 
             path="/chat/:id" 
             element={
-              <ProtectedRoute Child={Chat}/>
+              <ProtectedRoute>
+                <Chat />
+              </ProtectedRoute>
             } 
           />
           {/* <Route 

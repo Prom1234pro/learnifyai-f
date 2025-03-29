@@ -1,0 +1,124 @@
+body {
+    margin: 0;
+    background-color: #525659;
+    font-family: Segoe UI, Tahoma, sans-serif;
+    overflow: scroll;
+  }
+  
+  .Example input,
+  .Example button {
+    font: inherit;
+  }
+  
+  .Example header {
+    background-color: #323639;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+    padding: 20px;
+    color: white;
+  }
+  
+  .Example header h1 {
+    font-size: inherit;
+    margin: 0;
+  }
+  
+  .Example__container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 10px 0;
+    padding: 10px;
+  }
+  
+  .Example__container__load {
+    margin-top: 1em;
+    color: white;
+  }
+  
+  .Example__container__document {
+    width: 100%;
+    max-width: calc(100% - 2em);
+    margin: 1em 0;
+  }
+  
+  .Example__container__document .react-pdf__Document {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .Example__container__document .react-pdf__Page {
+    margin: 1em 0;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+  }
+  
+  .Example__container__document .react-pdf__message {
+    padding: 20px;
+    color: white;
+  }
+
+  .Example {
+    padding: 20px;
+    font-family: Arial, sans-serif;
+  }
+  
+  .upload-btn {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+  }
+  
+  .upload-btn:hover {
+    background-color: #0056b3;
+  }
+  
+  .Example__container {
+    display: flex;
+    gap: 20px;
+  }
+  
+  .content {
+    display: flex;
+    width: 100%;
+  }
+  
+  .toc {
+    width: 200px;
+    background: #f4f4f4;
+    padding: 10px;
+    border-radius: 5px;
+  }
+  
+  .toc h3 {
+    text-align: center;
+  }
+  
+  .toc ul {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .toc li {
+    padding: 8px;
+    cursor: pointer;
+  }
+  
+  .toc li:hover {
+    background-color: #ddd;
+  }
+  
+  .Example__container__document {
+    flex: 1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .selected {
+    border: 3px solid blue;
+  }
+  
+  

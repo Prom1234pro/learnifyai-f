@@ -1,16 +1,18 @@
 import { useState, useRef } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import upload from "../../assets/upload.svg";
-import { XIcon } from "lucide-react";
+import { XIcon, Trash2 } from "lucide-react";
 import ActionButton from "../Buttons/ActionButton";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 
 // eslint-disable-next-line react/prop-types
-const UploadDocument = ({ isOpen, setIsOpen, title, supportedMedia }) => {
+const UploadDocument = ({ isOpen, setIsOpen, title, supportedMedia, userId }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [documentPreview, setDocumentPreview] = useState(null);
+  const [xhrInstance, setXhrInstance] = useState(null);
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
 
@@ -19,6 +21,17 @@ const UploadDocument = ({ isOpen, setIsOpen, title, supportedMedia }) => {
     if (file) {
       setSelectedFile(file);
     }
+  };
+
+  const handleCancelUpload = () => {
+    if (xhrInstance) {
+      xhrInstance.abort(); // Cancel the request
+    }
+    setIsUploading(false);
+    setIsProcessing(false);
+    setUploadProgress(0);
+    setSelectedFile(null);
+    setDocumentPreview(null);
   };
 
   const handleUploadAndSummarize = async () => {
@@ -32,11 +45,14 @@ const UploadDocument = ({ isOpen, setIsOpen, title, supportedMedia }) => {
 
     const formData = new FormData();
     formData.append("file", selectedFile);
+    formData.append("file_type", supportedMedia);
+    formData.append("user_id", userId);
 
     try {
       // Use XMLHttpRequest for upload with progress tracking
       const uploadPromise = new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
+        setXhrInstance(xhr); // Save instance to allow cancellation
 
         xhr.upload.onprogress = (event) => {
           if (event.lengthComputable) {
@@ -55,45 +71,53 @@ const UploadDocument = ({ isOpen, setIsOpen, title, supportedMedia }) => {
 
         xhr.onerror = () => reject(new Error("Upload failed due to network error"));
 
-        xhr.open("POST", "https://learnifya1-d7a809b39e9d.herokuapp.com/upload", true);
+        xhr.open("POST", "http://localhost:5000/upload", true);
         xhr.send(formData);
       });
 
       const uploadData = await uploadPromise;
 
-      const uniqueId = `${Date.now()}`;
-      const docTitle = uploadData.text.split(" ").slice(0, 5).join(" ");
-
-      const documentData = {
-        documentName: selectedFile.name,
-        text: uploadData.text,
-        title: docTitle,
-      };
-
-      localStorage.setItem(uniqueId, JSON.stringify(documentData));
-      setDocumentPreview(uploadData.text);
       setUploadProgress(100); // Ensure it hits 100% when done
+      setIsUploading(false);
+      setIsProcessing(true); // Show processing state
 
-      // Summarize the document using fetch (no progress needed here)
-      const summaryResponse = await fetch("https://learnifya1-d7a809b39e9d.herokuapp.com/summarize", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: uploadData.text }),
-      });
-
-      if (!summaryResponse.ok) throw new Error("Failed to summarize document");
-
-      const summaryData = await summaryResponse.json();
-      localStorage.setItem(`${uniqueId}_summary`, summaryData.summary);
-
-      navigate(`/chat/${uniqueId}`, {
-        state: { initialMessage: summaryData.summary, isSummary: true, name: summaryData.title },
-      });
+      // Summarize the document
+    const userTimestamp = new Date().toLocaleTimeString(); // User message timestamp
+    const timestamp = `${Date.now()}`
+    const summaryResponse = await fetch("http://localhost:5000/summary", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        file_uris: [uploadData.file_uri],
+        message: "Summarize this document",
+        session_id: timestamp,
+        user_id: userId,
+        userTimestamp: userTimestamp, // Send user's timestamp to backend
+        updateTimestamp: new Date().toISOString(),
+      }),
+    });
+    
+    // Log response before reading JSON
+    console.log(summaryResponse);
+    
+    if (!summaryResponse.ok) {
+      throw new Error("Failed to summarize document");
+    }
+    
+    // Read JSON only once
+    const summaryData = await summaryResponse.json();
+    console.log(summaryData); // Log parsed JSON
+    
+    localStorage.setItem("summary", summaryData.response);
+    console.log(summaryData.title)
+    navigate(`/chat/${timestamp}`, {
+      state: { initialMessage: summaryData.response, isSummary: true, name: summaryData.title, type: supportedMedia, file_uri: summaryData.file_uri },
+    });
 
     } catch (error) {
       console.error("Error processing document:", error);
     } finally {
-      setIsUploading(false);
+      setIsProcessing(false);
     }
   };
 
@@ -108,7 +132,7 @@ const UploadDocument = ({ isOpen, setIsOpen, title, supportedMedia }) => {
               <Dialog.Title className="text-lg font-semibold text-[#282A2F]">{title}</Dialog.Title>
               <XIcon onClick={() => setIsOpen(false)} className="text-gray-500 cursor-pointer" size={20} />
             </div>
-            <p className="text-xs text-gray-500 mt-2">{supportedMedia}</p>
+            <p className="text-xs text-gray-500 mt-2">{supportedMedia === "doc"? "Only supports PDF, DOC, DOCX, TXT": "Only supports JPG, PNG, GIF"}</p>
 
             {/* File Upload Section */}
             <div 
@@ -123,7 +147,7 @@ const UploadDocument = ({ isOpen, setIsOpen, title, supportedMedia }) => {
                   type="file"
                   ref={fileInputRef}
                   className="hidden"
-                  accept=".pdf,.docx,.txt,.jpg,.png"
+                  accept={supportedMedia ==="doc"? ".pdf,.docx,.txt,":".jpg,.jpeg,.png"}
                   onChange={handleFileSelect}
                 />
               </label>
@@ -134,21 +158,16 @@ const UploadDocument = ({ isOpen, setIsOpen, title, supportedMedia }) => {
               <p className="text-sm text-gray-700 mt-2">Selected: {selectedFile.name}</p>
             )}
 
-            {/* Show Upload Progress */}
-            {isUploading && (
+            {/* Show Upload Progress & Processing Text */}
+            {(isUploading || isProcessing) && (
               <UploadProgress
                 fileName={selectedFile?.name}
                 uploadProgress={uploadProgress}
                 isUploading={isUploading}
-                onCancel={() => {
-                  setIsUploading(false);
-                  setUploadProgress(0);
-                  setSelectedFile(null);
-                }}
+                isProcessing={isProcessing}
+                onCancel={handleCancelUpload}
               />
             )}
-
-            {/* Show Extracted Text Preview */}
             {documentPreview && (
               <div className="mt-4 p-3 bg-gray-100 rounded-lg text-sm text-gray-700 max-h-40 overflow-y-auto">
                 <strong>Extracted Text:</strong>
@@ -175,15 +194,30 @@ const UploadDocument = ({ isOpen, setIsOpen, title, supportedMedia }) => {
 
 // UploadProgress Component
 // eslint-disable-next-line react/prop-types
-const UploadProgress = ({ fileName, uploadProgress, isUploading, onCancel }) => {
+const UploadProgress = ({ fileName, uploadProgress, isUploading, isProcessing, onCancel }) => {
   return (
-    <div className="mt-4">
-      <p className="text-sm text-gray-700">Uploading: {fileName}</p>
-      <progress value={uploadProgress} max="100" className="w-full h-2 rounded" />
-      <p className="text-sm text-gray-600 mt-1">{uploadProgress}%</p>
-      {isUploading && (
-        <button onClick={onCancel} className="text-red-500 mt-2 text-sm hover:underline">
-          Cancel
+    <div className="border rounded-lg p-4 w-full max-w-md bg-white flex items-center">
+      <div className="flex-1">
+        <p className="text-sm font-medium text-gray-700">{fileName}</p>
+
+        {isUploading && (
+          <>
+            <p className="text-xs text-gray-600">{uploadProgress}% • Uploading...</p>
+            <div className="w-full h-2 bg-gray-200 rounded-full mt-2">
+              <div
+                className="h-2 rounded-full bg-gradient-to-r from-purple-700 to-blue-500"
+                style={{ width: `${uploadProgress}%` }}
+              ></div>
+            </div>
+          </>
+        )}
+
+        {isProcessing && <p className="text-xs text-gray-600">Processing document...</p>}
+      </div>
+
+      {(isUploading || isProcessing) && (
+        <button onClick={onCancel} className="ml-2">
+          <Trash2 className="w-5 h-5 text-red-500 hover:text-red-700" />
         </button>
       )}
     </div>

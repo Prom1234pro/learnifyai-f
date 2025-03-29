@@ -1,15 +1,13 @@
 import { useState, useEffect } from "react";
 import { useParams, useLocation } from "react-router-dom";
-import ThoughtInput from "../../components/ChatComponent/ThoughtInput";
-import Header from "../../components/Header";
+import ThoughtInput from "../../components/ChatComponent/TI";
 import ChatMessage from "../../components/ChatComponent/ChatMessage";
 import UserChatMessage from "../../components/ChatComponent/UserChatMessage";
 import { db } from "../../firebase";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 
-// eslint-disable-next-line react/prop-types
-const Chat = ({isOpen, setIsOpen}) => {
+const Chat = () => {
   const { id } = useParams();
   const location = useLocation();
   const state = location.state || {};
@@ -46,92 +44,109 @@ const Chat = ({isOpen, setIsOpen}) => {
 
   useEffect(() => {
     const fetchMessages = async () => {
-      if (!userId || !id) return;
+        if (!userId || !id) return;
 
-      const chatDoc = doc(db, "users", userId, "chatSessions", id);
-      const chatSnap = await getDoc(chatDoc);
+        const chatDoc = doc(db, "users", userId, "chatSessions", id);
+        const chatSnap = await getDoc(chatDoc);
 
-      if (chatSnap.exists()) {
-        setMessages(chatSnap.data().messages || []);
-        setTitle(chatSnap.data().name || "Learnify AI");
-      } else if (state?.initialMessage) {
-        setTypingMessageId(1);
-        let initialMessages = state.isSummary
-          ? [{ id: 1, text: state.initialMessage, user: "User 1" }]
-          : [
-              { id: 1, text: state.initialMessage, user: "User 2" },
-              { id: 2, text: "Welcome to the chat", user: "User 1" },
+        if (chatSnap.exists()) {
+            setMessages(chatSnap.data().messages || []);
+            setTitle(chatSnap.data().name || "Learnify AI");
+        } else if (state?.initialMessage) {
+            setTypingMessageId(2);
+
+            let initialMessages = [
+                { 
+                    id: 1, 
+                    text: "Summarize this document", 
+                    user: "User 2", 
+                    file_uri: state.file_uris ?? [], // ✅ Ensure it's not undefined
+                    file_type: state.type ?? "unknown", // ✅ Provide a default value
+                },
+                { 
+                    id: 2, 
+                    text: state.initialMessage, 
+                    user: "User 1" 
+                }
             ];
 
-        await setDoc(chatDoc, { messages: initialMessages, updatedAt: new Date().toISOString(), name: state?.name });
-        setTitle(state?.name || "Learnify AI")
-        setMessages(initialMessages);
-      }
+            console.log(chatDoc);
+
+            await setDoc(chatDoc, { 
+                messages: initialMessages, 
+                updatedAt: new Date().toISOString(), 
+                name: state?.title ?? "Learnify AI" // ✅ Ensure title is not undefined
+            });
+
+            setTitle(state?.title || "Learnify AI");
+            setMessages(initialMessages);
+        }
     };
 
     fetchMessages();
-  }, [userId, id, state.initialMessage, state.isSummary, state.name]);
+}, [userId, id, state.initialMessage, state.isSummary, state.title, state.file_uris, state.type]);
 
   const addMessage = async (payload, user) => {
-    console.log(payload.text)
-    const text = payload.text
-    if (!payload.text.trim()) return;
+    console.log(payload.message);
+    const text = payload.message;
+    if (!payload.message.trim()) return;
 
-    const timestamp = new Date().toLocaleTimeString();
-    const newMessage = { id: messages.length + 1, text, user, timestamp };
+    const userTimestamp = new Date().toLocaleTimeString(); // User message timestamp
+    const newMessage = { id: messages.length + 1, text, user, timestamp: userTimestamp };
 
     setMessages((prevMessages) => [...prevMessages, newMessage]);
 
     const chatDoc = doc(db, "users", userId, "chatSessions", id);
 
     try {
-      const historyLog = [...messages, { user, text }];
-      const context = JSON.parse(localStorage.getItem(id) || "{}").text;
-      console.log("context",context)
-
-      const response = await fetch("https://learnifya1-d7a809b39e9d.herokuapp.com/chat-with-document", {
+      const response = await fetch("http://127.0.0.1:5000/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          question: text,
-          history_log: historyLog.map((msg) => ({ role: msg.user, text: msg.text })),
-          topic: "",
-          context: context,
+          user_id: userId,
+          session_id: id,
+          file_type: payload.file_type,
+          file_uris: payload.file_uris,
+          message: text,
+          userTimestamp: userTimestamp, // Send user's timestamp to backend
+          updateTimestamp: new Date().toISOString(), // Send an update timestamp
         }),
       });
 
       if (!response.ok) throw new Error(`API error: ${response.statusText}`);
 
       const data = await response.json();
-      const aitime = new Date().toLocaleTimeString();
-      const botMessage = { id: newMessage.id + 1, text: data.response[0], user: "User 1", timestamp: aitime };
+      const AITimestamp = new Date().toLocaleTimeString(); // AI response timestamp
+      const botMessage = { id: newMessage.id + 1, text: data.response, user: "Learnify AI", timestamp: AITimestamp, msg_type: "text", file_uri: null };
 
       setTypingMessageId(botMessage.id);
       setMessages((prevMessages) => [...prevMessages, botMessage]);
 
       await setDoc(chatDoc, { messages: [...messages, newMessage, botMessage], updatedAt: new Date().toISOString() }, { merge: true });
     } catch (error) {
-      console.error("Error calling the chat API or updating Firestore:", error);
+      console.error("Error calling the chat API:", error);
     }
-  };
+};
+
 
   useEffect(() => {
-    document.title = title; // Change the title
+    document.title = title; 
 
     return () => {
-      document.title = "Learnify AI"; // Optional cleanup when component unmounts
+      document.title = "Learnify AI"; 
     };
   }, [title]);
 
   return (
-    <div className="flex-1 h-screen flex flex-col bg-gradient-to-br from-[#ffffff] via-[#e7dbe9ac] to-[#A362A880] relative">
-      <Header isOpen={isOpen} setIsOpen={setIsOpen}/>
+    <>
       {/* Chat Messages (Scrollable Area) */}
-      <div className="h-[80vh] overflow-y-auto p-4 space-y-4 lg:pt-[6rem] lg:pl-40 lg:pr-48 md:px-28 pt-[4rem] px-6">
+      <div className="h-[80vh] overflow-y-auto p-4 space-y-4 lg:pt-[6rem] lg:pl-40 lg:pr-48 md:px-28 pt-[4rem] px-6 pb-24">
         {messages.map((msg, index) => (
           <div key={index} className={`flex ${msg.user === "User 2" ? "justify-end" : "justify-start"}`}>
             {msg.user === "User 2" ? (
               <UserChatMessage
+              msgType={msg.file_type} 
+              fileUri={msg.file_uri}
               username={userName}
               timestamp={msg.timestamp}
               message={msg.text}
@@ -149,7 +164,7 @@ const Chat = ({isOpen, setIsOpen}) => {
       <div className="lg:pl-40 lg:pr-48 md:px-28 px-0 w-full absolute bottom-0">
         <ThoughtInput onSend={(message) => addMessage(message, "User 2")} />
       </div>
-    </div>
+    </>
   );
 };
 
