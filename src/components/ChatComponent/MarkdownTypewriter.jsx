@@ -1,20 +1,17 @@
-/* eslint-disable react/prop-types */
 import { useState, useEffect, useRef } from "react";
 import MarkdownPreview from '@uiw/react-markdown-preview';
-// import ReactMarkdown from "react-markdown";
-// import remarkGfm from "remark-gfm";
-// import remarkBreaks from "remark-breaks";
-// import rehypeRaw from "rehype-raw";
 import './markdown.css'
 
-function MarkdownTypewriter({ text, speed = 3, chunkSize = 6, current = false }) {
+function MarkdownTypewriter({ text, userScrolled, speed = 3, chunkSize = 6, current = false }) {
   const [displayedText, setDisplayedText] = useState("");
   const [index, setIndex] = useState(0);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [index]);
+    if (!userScrolled) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [index, userScrolled]);
 
   useEffect(() => {
     if (!current) {
@@ -33,9 +30,14 @@ function MarkdownTypewriter({ text, speed = 3, chunkSize = 6, current = false })
 
   return (
     <>
-      <MarkdownPreview style={{
-        background: "transparent"
-      }} source={displayedText}/>
+      <MarkdownPreview 
+        className="markdown-preview"
+        style={{
+          background: "transparent", 
+          color: "#111"
+        }} 
+        source={displayedText} 
+      />
         
       <div ref={messagesEndRef} />
     </>

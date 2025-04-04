@@ -6,7 +6,7 @@ import GoogleLogo from "../../assets/google-icon.svg";
 import Logo from "../../assets/logo.png";
 import { Send, RotateCw, Copy } from "lucide-react";
 import ActionButton from "../../components/Buttons/ActionButton";
-import { auth, db } from '../../firebase';
+import { initFirebase } from '../../firebase';
 import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, sendEmailVerification, updateProfile } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 
@@ -49,6 +49,8 @@ const ThoughtInput = () => {
 
 
 export default function SignUp() {
+    const [db, setDb] = useState(null);
+    const [auth, setAuth] = useState(null);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [displayName, setDisplayName] = useState("");
@@ -67,6 +69,16 @@ export default function SignUp() {
     const isValidEmail = (email) => {
       return /\S+@\S+\.\S+/.test(email);
     };
+
+      
+    useEffect(() => {
+      const initializeFirebase = async () => {
+        const { db, auth } = await initFirebase();
+        setDb(db);
+        setAuth(auth);
+      };
+      initializeFirebase();
+    }, []);
   
     
     const storeUserInFirestore = async (user) => {
@@ -205,7 +217,7 @@ export default function SignUp() {
           navigate('/chat');
         }
       } catch (error) {
-        toast.error(error);
+        toast.error("Could not complete google signun");
       } finally {
         setIsLoading(false);
       }

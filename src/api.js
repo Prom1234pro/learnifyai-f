@@ -41,7 +41,7 @@ const makeRequest = async (url, options = {}) => {
   
       xhr.onerror = () => reject(new Error("Upload failed due to network error"));
   
-      xhr.open("POST", "http://localhost:5000/upload", true);
+      xhr.open("POST", "https://learnifya1-d7a809b39e9d.herokuapp.com/upload", true);
       xhr.send(formData);
     });
   };

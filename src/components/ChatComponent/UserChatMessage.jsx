@@ -32,18 +32,28 @@ const UserChatMessage = ({ msgType, fileUri, message, timestamp, userName, userP
 
         {/* Message Content */}
         {
-          msgType === "text"? <p className="text-gray-800 text-sm bg-[#E5E7EA] rounded-md p-3">{message}</p> : 
-          msgType === "doc"?  <iframe 
+      //     msgType === "text" || "unknown"? <p className="text-gray-800 text-sm bg-[#E5E7EA] rounded-md p-3">{message}</p> : 
+      //     msgType === "doc"?  <iframe 
+      //     src={fileUri} 
+      //     width="100%" 
+      //     height="500px" 
+      //     title="Document Preview"
+      //   /> : <img 
+      //   src={fileUri} 
+      //   alt="Uploaded File" 
+      //   style={{ maxWidth: "100%", height: "auto" }} 
+      // />
+    }
+    {/* Create a card here for pdf and image display */}
+      {fileUri && 
+      <iframe 
           src={fileUri} 
           width="100%" 
-          height="500px" 
+          height="100px" 
           title="Document Preview"
-        /> : <img 
-        src={fileUri} 
-        alt="Uploaded File" 
-        style={{ maxWidth: "100%", height: "auto" }} 
-      />
-        }
+        />
+      }
+      <p className="text-gray-800 text-sm bg-[#E5E7EA] rounded-md p-3">{message}</p>
         
         <div ref={messagesEndRef} />
       </div>

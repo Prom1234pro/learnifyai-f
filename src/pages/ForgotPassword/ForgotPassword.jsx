@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
-import { getAuth, sendPasswordResetEmail } from "firebase/auth";
+import { sendPasswordResetEmail } from "firebase/auth";
+import { initFirebase } from "../../firebase";
 import "react-toastify/dist/ReactToastify.css";
 import ActionButton from "../../components/Buttons/ActionButton";
 import Logo from "../../assets/logo.png";
@@ -9,7 +10,6 @@ import "../../firebase";
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
   const [active, setActive] = useState(false);
-  const auth = getAuth();
 
   const isValidEmail = (email) => {
     return /\S+@\S+\.\S+/.test(email);
@@ -26,6 +26,7 @@ const ForgotPassword = () => {
     }
 
     try {
+      const { auth } = await initFirebase();
       await sendPasswordResetEmail(auth, email, {
         url: "http://localhost:5173/reset-password", // Custom reset link
         handleCodeInApp: true, // Ensures the action is handled in your app

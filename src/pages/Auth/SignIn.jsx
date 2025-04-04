@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
+import { toast } from "react-toastify";
 import { AlertCircle } from "lucide-react";
 import { Eye, EyeOff } from "lucide-react";
 import GoogleLogo from "../../assets/google-icon.svg";
 import Logo from "../../assets/logo.png";
 import { Send, RotateCw, Copy } from "lucide-react";
 import ActionButton from "../../components/Buttons/ActionButton";
-import { auth } from '../../firebase';
+import { initFirebase } from '../../firebase';
 import {
   signInWithEmailAndPassword,
   GoogleAuthProvider,
@@ -54,6 +55,7 @@ const ThoughtInput = () => {
 
 
 export default function SignIn() {
+    const [auth, setAuth] = useState(null);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [active, setActive] = useState(false);
@@ -65,6 +67,16 @@ export default function SignIn() {
 
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
+      
+    
+  
+    useEffect(() => {
+        const setUpAuth = async () => {
+          const { auth } = await initFirebase();
+          setAuth(auth)
+        }
+        setUpAuth()
+    }, [])
 
     // Function to validate email format
     const isValidEmail = (email) => {
@@ -177,7 +189,8 @@ export default function SignIn() {
           navigate('/chat');
         }
       } catch (error) {
-        setEmailError(error.message.replace('Firebase: ', ''));
+        // setEmailError(error.message.replace('Firebase: ', ''));
+        toast.error("Could not complete google signin")
       } finally {
         setIsLoading(false);
       }
@@ -236,8 +249,7 @@ export default function SignIn() {
             <div className="relative mt-1">
             
             <input 
-              type={showPassword ? "text" : "password"} 
-              
+              type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)} placeholder="Enter password" 
               className={`w-full px-4 py-2 border rounded-md focus:ring-2 bg-[#FAFAFA] focus:ring-indigo-500 ${passwordError ? "border-red-500" : "border-gray-300"}`}

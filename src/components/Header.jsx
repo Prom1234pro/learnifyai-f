@@ -29,7 +29,7 @@ const [userName, setUserName] = useState("Anonymous"); // Default username
     return () => unsubscribe(); // Cleanup subscription
   }, []);
   return (
-    <div className="flex justify-between pr-2 mt-2 py-2 sm:bg-none bg-gradient-to-br from-[#ffffff] via-[#f1e7f3] to-[#bb75c0] sticky sm:static top-0">
+    <div className="flex justify-between mt-2 py-0 sm:py-2 sm:bg-none bg-gradient-to-br from-[#ffffff] via-[#f1e7f3] to-[#bb75c0] sticky top-0 z-[0]">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="lg:hidden z-50 text-black rounded-md"
@@ -37,8 +37,8 @@ const [userName, setUserName] = useState("Anonymous"); // Default username
         <img className={`${isOpen && "opacity-0"}`} width={40} height={40} src={menuIcon}/>
       </button>
 
-      <div className="ml-auto flex items-center px-3 py-1 rounded-full bg-gradient-to-r from-[#632366] to-[#44798E] text-white text-sm font-normal">
-        <span className="mr-2">{userName}</span>
+      <div className="ml-auto flex items-center bg-none p-1 md:px-3 md:py-1 rounded-full md:bg-gradient-to-r from-[#632366] to-[#44798E] text-white text-sm font-normal">
+      <span className="hidden md:inline mr-2">{userName}</span>
         {userPhoto? (
           <img
             src={userPhoto}

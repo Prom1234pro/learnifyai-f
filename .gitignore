@@ -18,6 +18,8 @@ dist-ssr
 .idea
 .DS_Store
 .env
+.env.production
+.env.development
 .firebase
 *.suo
 *.ntvs*

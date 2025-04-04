@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { getAuth, applyActionCode } from "firebase/auth";
+import { initFirebase } from '../../firebase';
+import { applyActionCode } from "firebase/auth";
 import { toast } from "react-toastify";
 
 // Utility function to safely apply action code
@@ -19,7 +20,7 @@ const EmailVerification = () => {
   const [isLoading, setIsLoading] = useState(true);
   const hasVerifiedRef = useRef(false); // Tracks if verification has run
 
-  const auth = getAuth();
+  // const auth = getAuth();
   const oobCode = searchParams.get("oobCode");
 
   useEffect(() => {
@@ -29,6 +30,7 @@ const EmailVerification = () => {
         console.log("Verification already attempted, skipping...");
         return;
       }
+      const { auth } = await initFirebase()
 
       // Mark as run
       hasVerifiedRef.current = true;

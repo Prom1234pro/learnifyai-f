@@ -1,22 +1,25 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { auth } from "../../firebase";
+import { initFirebase } from "../../firebase";
 
 export default function LearnifyAI() {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true); // Track loading state
-
+  const [loading, setLoading] = useState(true);
+  
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (user) {
-        navigate("/chat");
-      } else {
-        setLoading(false);
+      const setUpAuth = async () => {
+        const { auth } = await initFirebase();
+        const unsubscribe = auth.onAuthStateChanged((user) => {
+          if (user) {
+            navigate("/chat");
+          } else {
+            setLoading(false);
+          }
+        });
+        return () => unsubscribe();
       }
-    });
-    return () => unsubscribe();
-  }, [navigate]);
-
+      setUpAuth()
+  }, [navigate])
 
   if (loading) {
     return (

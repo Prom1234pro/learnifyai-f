@@ -1,21 +1,30 @@
 import { initializeApp } from "firebase/app";
-import {getAuth} from "firebase/auth" ;
-import { getFirestore } from 'firebase/firestore';
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
 
+let app;
+let db;
+let auth;
 
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
-};
+async function getFirebaseConfig() {
+  try {
+    const response = await fetch("https://learnifya1-d7a809b39e9d.herokuapp.com/api/firebase-config"); // Fetch config from Flask
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching Firebase config:", error);
+    return null;
+  }
+}
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-export { db };
-export const auth=getAuth(app);
-export default app;
+// ✅ Function to initialize Firebase dynamically
+export async function initFirebase() {
+  if (!app) {
+    const firebaseConfig = await getFirebaseConfig();
+    if (firebaseConfig) {
+      app = initializeApp(firebaseConfig);
+      db = getFirestore(app);
+      auth = getAuth(app);
+    }
+  }
+  return { app, db, auth };
+}

@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import ProtectedRoute from './pages/ProtectedRoute';
 import PDFPage from './pages/PDF2';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
@@ -14,7 +15,22 @@ import EmailVerificationSent from './pages/Auth/EmailVerificationSent';
 import EmailVerification from './pages/Auth/EmailVerification';
 import EmailVerificationSuccess from './pages/Auth/EmailVerificationSuccess';
 
+
+
+
 const App = () => {
+  useEffect(() => {
+    const setAppHeight = () => {
+      document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`);
+    };
+    setAppHeight();
+    window.addEventListener('resize', setAppHeight);
+    return () => window.removeEventListener('resize', setAppHeight);
+  }, []);
+  
+  useEffect(() => {
+    document.documentElement.style.colorScheme = "light";
+  }, []);
   return (
       <Router>
         <ToastContainer position="top-right" autoClose={3000} />

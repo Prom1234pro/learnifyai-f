@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Eye, EyeOff } from "lucide-react";
-import { getAuth, confirmPasswordReset } from "firebase/auth";
+import { confirmPasswordReset } from "firebase/auth";
+import { initFirebase } from "../../firebase";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import ActionButton from "../../components/Buttons/ActionButton";
 import Logo from "../../assets/logo.png";
@@ -16,7 +17,6 @@ export default function CreateNewPassword() {
   
   const [searchParams] = useSearchParams(); // Get query params from URL
   const navigate = useNavigate();
-  const auth = getAuth();
   const oobCode = searchParams.get("oobCode"); // Get the reset token from URL
 
   useEffect(() => {
@@ -44,6 +44,7 @@ export default function CreateNewPassword() {
     }
 
     try {
+      const { auth } = await initFirebase();
       await confirmPasswordReset(auth, oobCode, password);
       toast.success("Password reset successful! Redirecting to login...");
       setTimeout(() => navigate("/login"), 3000); // Redirect after success

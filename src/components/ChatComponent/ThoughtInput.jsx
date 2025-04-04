@@ -1,23 +1,21 @@
 import { useState, useRef, useEffect } from "react";
-import imgIcon from "../../assets/img.svg";
-import docIcon from "../../assets/doc.svg";
 import brain from "../../assets/brain.png";
-import { Send } from "lucide-react";
+import { Send, Plus, Book, X } from "lucide-react";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { upload } from "../../api";
-import './progress.css'
+import Library from './Library';
+import "./progress.css";
 
 // eslint-disable-next-line react/prop-types
 const ThoughtInput = ({ onSend }) => {
   const [input, setInput] = useState("");
-  const [attachments, setAttachments] = useState([]); // Unified state for all attachments
-  const fileInputRef = useRef(null); // Ref for image upload input
-  const docInputRef = useRef(null); 
-  // const [xhrInstance, setXhrInstance] = useState(null);
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const fileInputRef = useRef(null);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+
   const [, setUserId] = useState(null);
 
-
-  
   useEffect(() => {
     const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -25,281 +23,229 @@ const ThoughtInput = ({ onSend }) => {
         setUserId(user.uid);
       }
     });
-    return () => unsubscribe(); // Cleanup subscription
+    return () => unsubscribe();
   }, []);
 
-  // Handle sending the input with text and attachments
-  const handleSend = async () => {
-    if (!input.trim() && attachments.length === 0) return;
-    console.log(attachments)
-    const messageData = {
-      message: input,
-      file_uris: attachments.map((file) => file.fileUri), // Send file URIs instead of files
-    };
-    console.log(messageData)
-    onSend(messageData)
+  // Function to determine file type based on extension
+  const getFileType = (file) => {
+    return file.name.split('.').pop().toLowerCase();
   };
-  
 
-  // Handle pasting images from clipboard
-  const handlePaste = (e) => {
-    const items = e.clipboardData?.items;
-    if (!items) return;
-  
-    for (const item of items) {
-      if (item.type.startsWith("image/")) {
-        const blob = item.getAsFile();
-        const reader = new FileReader();
-        reader.onload = async (event) => {
-          const base64Image = event.target.result;
-  
-          // Add to attachments as base64 temporarily (for preview)
-          setAttachments((prev) => [
-            ...prev, 
-          { id: item.name, type: "image", data: base64Image, fileUri: "", progress: 0, uploading: true },
-          ]);
-  
-          // Convert base64 image to Blob
-          const formData = new FormData();
-          formData.append("file", blob, "pasted_image.png");
-  
-          try {
-            const fileUri = await upload(formData, (progress) => {
-              setAttachments((prev) => 
-                prev.map((att) => 
-                  att.id === item.name ? { ...att, progress } : att
-                )
-              );
-            }); // Upload and get file URL
-            console.log("fileUri", fileUri)
-            // Update state with the uploaded file URL
-            setAttachments((prev) =>
-              prev.map((att) =>
-                att.data === base64Image ? { ...att, fileUri, uploading: false } : att
-              )
-            );
-          } catch (error) {
-            console.error("Upload failed:", error);
-          }
-        };
-        reader.readAsDataURL(blob);
-        e.preventDefault();
-      }
-    }
+  // Toggle popup visibility
+  const togglePopup = () => {
+    setIsPopupOpen((prev) => !prev);
   };
-  
-  // Handle file upload (images or documents)
-  const handleImageUpload = async (e) => {
+
+  // Handle file upload (both images and documents)
+  const handleFileUpload = async (e) => {
     const file = e.target.files[0];
-    if (file && file.type.startsWith("image/")) {
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        const base64Image = event.target.result;
-  
-        // Add the image to state with initial progress
-        setAttachments((prev) => [
-          ...prev,
-          { id: file.name, type: "image", data: base64Image, fileUri: "", progress: 0, uploading: true },
-        ]);
-  
-        const formData = new FormData();
-        formData.append("file", file);
-  
-        try {
-          const fileUri = await upload(formData, (progress) => {
-            setAttachments((prev) =>
-              prev.map((att) =>
-                att.id === file.name ? { ...att, progress } : att
-              )
-            );
-          });
-          console.log("image fileUri", fileUri)
-          
-          // Replace base64 preview with uploaded file URL
-          setAttachments((prev) =>
-            prev.map((att) =>
-              att.id === file.name ? { ...att, fileUri: fileUri.file_uri, uploading: false } : att
-            )
-          );
-        } catch (error) {
-          console.error("Upload failed:", error);
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-  
-  const handleDocUpload = async (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      // Add the document to state with initial progress
-      setAttachments((prev) => [
+    if (!file) return;
+
+    const fileType = getFileType(file); // Use the same getFileType function
+    const reader = new FileReader();
+
+    reader.onload = async (event) => {
+      const previewData = event.target.result;
+
+      // Add the file to selectedFiles state with initial progress
+      setSelectedFiles((prev) => [
         ...prev,
-        { id: file.name, type: "doc", fileUri: "", name: file.name, progress: 0, uploading: true },
+        {
+          file,
+          type: fileType, // Use the correct file type (e.g., "pdf", "jpg", etc.)
+          data: previewData,
+          fileUri: "",
+          progress: 0,
+          uploading: true,
+          name: file.name,
+          selectedPages: fileType === "pdf" ? [] : null,
+        },
       ]);
-  
+
       const formData = new FormData();
       formData.append("file", file);
-  
+
+      setIsUploading(true)
       try {
         const fileUri = await upload(formData, (progress) => {
-          setAttachments((prev) =>
-            prev.map((att) =>
-              att.id === file.name ? { ...att, progress } : att
+          setSelectedFiles((prev) =>
+            prev.map((f) =>
+              f.name === file.name ? { ...f, progress } : f
             )
           );
         });
-  
-        console.log("doc fileUri", fileUri)
 
-        // Replace progress with uploaded file URL
-        setAttachments((prev) =>
-          prev.map((att) =>
-            att.id === file.name ? { ...att, fileUri: fileUri.file_uri, uploading: false } : att
+        // Update state with the uploaded file URL
+        setSelectedFiles((prev) =>
+          prev.map((f) =>
+            f.name === file.name ? { ...f, fileUri: fileUri.file_uri, uploading: false } : f
           )
         );
       } catch (error) {
         console.error("Upload failed:", error);
+      }finally {
+        setIsUploading(false);
       }
+    };
+
+    if (fileType === "jpg" || fileType === "jpeg" || fileType === "png" || fileType === "gif") {
+      reader.readAsDataURL(file);
+    } else {
+      reader.readAsArrayBuffer(file);
     }
   };
+
+  // Handle sending message with selected files
+  const handleSend = async () => {
+    if (!input.trim() && selectedFiles.length === 0) return;
+
+    const messageData = {
+      message: input,
+      file_uris: selectedFiles.map((file) => file.fileUri).filter((uri) => uri),
+    };
+    onSend(messageData);
+
+    // Clear input and selected files after sending
+    setInput("");
+    setSelectedFiles([]);
+  };
   
   
 
-  // Remove an attachment by index
-  const removeAttachment = (index) => {
-    setAttachments((prev) => prev.filter((_, i) => i !== index));
+  // Remove a file by name
+  const removeFile = (name) => {
+    setSelectedFiles((prev) => {
+      const fileToRemove = prev.find((f) => f.name === name);
+      if (fileToRemove?.data) {
+        URL.revokeObjectURL(fileToRemove.data);
+      }
+      return prev.filter((f) => f.name !== name);
+    });
   };
 
-  // Calculate dynamic height for textarea
-  const lines = input.split("\n").length;
-  const dynamicHeight = `${lines * 1.5}rem`;
+  const dynamicHeight = `${input.split("\n").length * 1.5}rem`;
 
   return (
-      <div className="flex flex-col px-4 pb-2 gap-4 bg-[#f7f7f8] rounded-2xl w-full mx-auto border border-gray-200 shadow-sm">
-        {/* Attachments Preview */}
-        {attachments.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-2">
-            {attachments.map((attachment, index) => (
-              <div key={index} className="relative">
-                {attachment.type === "image" ? (
-                  <>
-                  <img
-                    src={attachment.data}
-                    alt={`Attachment ${index + 1}`}
-                    className="w-20 h-20 object-cover rounded-md border border-gray-200"
+    <>
+    <div className="flex flex-col px-4 pb-2 gap-4 bg-[#fefefe] rounded-3xl w-full mx-auto border border-gray-200 shadow-md">
+      {/* Selected Files Preview */}
+      {selectedFiles.length > 0 && (
+        <div className="flex flex-wrap gap-2 mt-2">
+          {selectedFiles.map((file, index) => (
+            <div key={index} className="relative">
+              {file.type === "jpg" || file.type === "jpeg" || file.type === "png" || file.type === "gif" ? (
+                <img
+                  src={file.data}
+                  alt="Preview"
+                  className="w-20 h-20 object-cover rounded-md border border-gray-200"
+                />
+              ) : (
+                <div className="w-20 h-20 flex flex-col items-center justify-center bg-gray-100 rounded-md border border-gray-200">
+                  <span className="text-xs text-gray-600 truncate w-full text-center">
+                    {file.name}
+                  </span>
+                </div>
+              )}
+              {file.uploading && (
+                <div className="progress-container">
+                  <svg className="progress-circle" viewBox="0 0 36 36">
+                    <path className="progress-bg" d="M18 2.084a 15.916 15.916 0 0 1 0 31.832" />
+                    <path
+                      className="progress-bar"
+                      d="M18 2.084a 15.916 15.916 0 0 1 0 31.832"
+                      strokeDasharray={`${file.progress}, 100`}
                     />
-                    
-                    { attachment.uploading && (<div className="progress-container">
-                      <svg className="progress-circle" viewBox="0 0 36 36">
-                        <path
-                          className="progress-bg"
-                          d="M18 2.084a 15.916 15.916 0 0 1 0 31.832"
-                        />
-                        <path
-                          className="progress-bar"
-                          d="M18 2.084a 15.916 15.916 0 0 1 0 31.832"
-                          strokeDasharray={`${attachment.progress}, 100`}
-                        />
-                      </svg>
-                      <span className="progress-text">{attachment.progress}%</span>
-                    </div>)}
-                   
-                  </>
-                ) : (
-                  <div className="w-20 h-20 flex flex-col items-center justify-center bg-gray-100 rounded-md border border-gray-200">
-                    <img src={docIcon} alt="Doc Icon" className="w-8 h-8" />
-                    <span className="text-xs text-gray-600 truncate w-full text-center">
-                      {attachment.name}
-                    </span>
-                  </div>
-                )}
-                <button
-                  onClick={() => removeAttachment(index)}
-                  className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
-                >
-                  ×
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-  
-        {/* Brain Icon & Textarea */}
-        <div className="flex items-start space-x-3 py-2">
-          <img src={brain} alt="Brain Icon" className="w-6 h-6 mt-1" />
-          <textarea
-            className="w-full bg-transparent resize-none outline-none text-lg text-[12px] sm:text-[14px] chat-input-area form-input placeholder:text-slate-400/70"
-            placeholder="What’s on your mind?..."
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
-                if (window.innerWidth > 768) { // Prevent this only on desktop
-                  e.preventDefault();
-                  handleSend();
-                }
-              }
-            }}
-            onPaste={handlePaste}
-            style={{
-              height: dynamicHeight,
-              minHeight: "2.8rem",
-              maxHeight: "15rem",
-              overflowY: "auto",
-            }}
-            spellCheck={true}
-          />
+                  </svg>
+                  <span className="progress-text">{file.progress}%</span>
+                </div>
+              )}
+              
+                <X 
+                onClick={() => removeFile(file.name)}
+                className="absolute top-0 right-0 bg-[#4b4a4a] text-white rounded-full p-[2px] w-[0.95rem] h-[0.95rem] flex items-center justify-center text-xs hover:bg-red-600"
+                size={11}/>
+            </div>
+          ))}
         </div>
-  
-        {/* Icons */}
-        <div className="flex w-full items-center justify-between space-x-4 text-gray-400">
-          {/* Image Upload Button */}
-          <div className="flex gap-4">
-  
+      )}
+
+      {/* Brain Icon & Textarea */}
+      <div className="flex items-start space-x-3 pt-4">
+        <img src={brain} alt="Brain Icon" className="w-6 h-6" />
+        <textarea
+          className="w-full bg-transparent resize-none outline-none text-[16px] chat-input-area form-input placeholder:text-slate-400/70 custom-scrollbar"
+          placeholder="What’s on your mind?..."
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+              if (window.innerWidth > 768) {
+                e.preventDefault();
+                handleSend();
+              }
+            }
+          }}
+          style={{ height: dynamicHeight, minHeight: "2.8rem", maxHeight: "12rem", overflowY: "auto" }}
+          spellCheck={true}
+        />
+      </div>
+
+      {/* Icons */}
+      <div className="flex w-full items-center justify-between space-x-4 text-gray-400">
+        <div className="flex gap-4">
+          {/* Plus Icon for File Upload */}
           <button
             onClick={() => fileInputRef.current.click()}
-            className="hover:text-gray-600"
+            className="hover:text-gray-600 bg-[white] border-2 border-[#e8e8e8] text-[#787878] w-10 h-10 flex items-center justify-center rounded-full hover:bg-[#f1f1f1] transition-all"
           >
-            <img src={imgIcon} alt="Image Icon" className="w-5 h-5" />
+            <Plus size={20} />
           </button>
           <input
             type="file"
-            accept="image/*"
+            accept="image/*,.pdf,.doc,.docx,.txt"
             ref={fileInputRef}
-            onChange={handleImageUpload}
+            onChange={handleFileUpload}
             className="hidden"
           />
-  
-          {/* Document Upload Button */}
-          <div className="h-[20px] border border-r-[#b0b0b0]"></div>
+
+          {/* Book Icon for Popup */}
           <button
-            onClick={() => docInputRef.current.click()}
-            className="hover:text-gray-600"
+            onClick={togglePopup}
+            className="hover:text-gray-600 bg-[white] border-2 border-[#e8e8e8] text-[#787878] w-10 h-10 flex items-center justify-center rounded-full hover:bg-[#f1f1f1] transition-all rotate-45"
+
+            // className="hover:text-gray-600 bg-purple-600 border-2 border-green-500 text-white w-10 h-10 flex items-center justify-center rounded-full shadow-md hover:bg-purple-700 transition-all"
           >
-            <img src={docIcon} alt="Doc Icon" className="w-5 h-5" />
-          </button>
-          <input
-            type="file"
-            accept=".pdf,.doc,.docx,.txt"
-            ref={docInputRef}
-            onChange={handleDocUpload}
-            className="hidden"
-          />
-          </div>
-  
-          {/* Send Button */}
-  
-          <button
-            onClick={handleSend}
-            className="bg-gradient-to-r justify-end from-[#632366] to-[#44798E] text-white p-2 rounded-full shadow-md hover:scale-105 transition-transform"
-          >
-            <Send size={18} />
+            <Book size={20} />
           </button>
         </div>
-  
+
+        {/* Send Button */}
+        <button
+          onClick={handleSend}
+          disabled={!input.trim() && (selectedFiles.length === 0 || isUploading)}
+          className={`p-2 rounded-full shadow-md transition-transform
+            ${
+              !input.trim() && (selectedFiles.length === 0 || isUploading)
+                ? "bg-gray-300"
+                : "bg-gradient-to-r from-[#632366] to-[#44798E] text-white hover:scale-105"
+            }`}
+          >
+          <Send size={18} />
+        </button>
       </div>
-    );
+
+    </div>
+    {/* Popup Modal */}
+    {isPopupOpen && (
+      <Library
+        selectedFiles={selectedFiles}
+        setSelectedFiles={setSelectedFiles}
+        togglePopup={togglePopup}
+      />
+    )}
+    </>
+
+  );
 };
 
 export default ThoughtInput;

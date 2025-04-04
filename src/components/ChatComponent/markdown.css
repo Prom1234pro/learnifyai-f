@@ -1,15 +1,144 @@
+.markdown-content {
+  flex-grow: 1;
+  max-width: 100%;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #333;
+}
+
+/* Headings */
 .markdown-content h1, 
 .markdown-content h2, 
 .markdown-content h3 {
-  margin-top: 16px; /* Add space above headings */
-  margin-bottom: 8px; /* Add space below headings */
+  margin-top: 16px;
+  margin-bottom: 8px;
+  font-weight: bold;
 }
 
+.markdown-content h1 {
+  font-size: 2rem;
+}
+
+.markdown-content h2 {
+  font-size: 1.75rem;
+}
+
+.markdown-content h3 {
+  font-size: 1.5rem;
+}
+
+/* Paragraphs */
 .markdown-content p {
-  margin-bottom: 12px; /* Space between paragraphs */
+  margin-bottom: 12px;
 }
 
+/* Line Breaks */
 .markdown-content br {
   display: block;
-  margin-bottom: 12px; /* Space between manual breaks */
+  margin-bottom: 12px;
+}
+
+/* Lists */
+.markdown-content ul,
+.markdown-content ol {
+  margin-left: 20px;
+  padding-left: 20px;
+}
+
+.markdown-content li {
+  margin-bottom: 6px;
+}
+
+/* Blockquotes */
+.markdown-content blockquote {
+  border-left: 4px solid #ccc;
+  padding-left: 16px;
+  color: #666;
+  font-style: italic;
+  margin: 16px 0;
+}
+
+/* Code Blocks */
+.markdown-content pre {
+  background: #f4f4f4;
+  padding: 12px;
+  border-radius: 5px;
+  overflow-x: auto;
+}
+/* .wmde-markdown {
+  width: 70%;
+  max-width: 600px;
+} */
+/* .wmde-markdown pre > code {
+  background: #f4f4f4;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: "Courier New", monospace;
+} */
+
+/* Images */
+.markdown-content img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 12px 0;
+  border-radius: 5px;
+}
+
+/* Tables */
+.markdown-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 16px;
+}
+
+.markdown-content th, 
+.markdown-content td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.markdown-content th {
+  background: #f4f4f4;
+  font-weight: bold;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .markdown-content {
+    font-size: 0.95rem;
+  }
+
+  .markdown-content h1 {
+    font-size: 1.75rem;
+  }
+
+  .markdown-content h2 {
+    font-size: 1.5rem;
+  }
+
+  .markdown-content h3 {
+    font-size: 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .markdown-content {
+    font-size: 0.9rem;
+  }
+
+  .markdown-content h1 {
+    font-size: 1.5rem;
+  }
+
+  .markdown-content h2 {
+    font-size: 1.25rem;
+  }
+
+  .markdown-content h3 {
+    font-size: 1.1rem;
+  }
 }

@@ -1,33 +1,130 @@
 /* eslint-disable react/prop-types */
-import { useEffect, useState } from "react";
-import { Search, Plus, Edit, LogOut } from "lucide-react";
+import React, { useEffect, useState, useRef } from "react";
+import { Menu } from "@headlessui/react";
+import { Search, Plus, LogOut, MoreHorizontal, Upload, Pencil, Archive, Trash2 } from "lucide-react";
 import ActionButton from "./Buttons/ActionButton";
 import Logo from "../assets/logo.png";
-import menuIcon from "../assets/menu.svg";
-import { auth } from '../firebase';
 import { useNavigate } from 'react-router-dom';
-import { db } from '../firebase';
+// import { db } from '../firebase';
+import { initFirebase } from '../firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import { signOut } from "firebase/auth";
+import { toast } from "react-toastify";
+
+
+
+
+const ChatDropdown = ({ chat, onEdit }) => (
+  <Menu as="div" className="relative">
+    <Menu.Button className="p-1 text-gray-400 hover:text-gray-600">
+      <MoreHorizontal className="w-5 h-5" />
+    </Menu.Button>
+
+    <Menu.Items
+      className="absolute right-0 mt-2 w-40 bg-white shadow-lg rounded-lg p-2 z-[9999]"
+      style={{
+        bottom: chat.isBottom ? "100%" : "auto",
+        top: chat.isBottom ? "auto" : "100%",
+      }}
+    >
+      <Menu.Item>
+        {({ active }) => (
+          <button className={`flex items-center w-full px-3 py-2 ${active ? "bg-gray-100" : ""}`}>
+            <Upload className="w-4 h-4 mr-2" /> Share
+          </button>
+        )}
+      </Menu.Item>
+      <Menu.Item>
+        {({ active }) => (
+          <button onClick={() => onEdit(chat.id, chat.name)} className={`flex items-center w-full px-3 py-2 ${active ? "bg-gray-100" : ""}`}>
+            <Pencil className="w-4 h-4 mr-2" /> Rename
+          </button>
+        )}
+      </Menu.Item>
+      <Menu.Item>
+        {({ active }) => (
+          <button className={`flex items-center w-full px-3 py-2 ${active ? "bg-gray-100" : ""}`}>
+            <Archive className="w-4 h-4 mr-2" /> Export
+          </button>
+        )}
+      </Menu.Item>
+      <Menu.Item>
+        {({ active }) => (
+          <button className={`flex items-center w-full px-3 py-2 text-red-500 ${active ? "bg-red-100" : ""}`}>
+            <Trash2 className="w-4 h-4 mr-2" /> Delete
+          </button>
+        )}
+      </Menu.Item>
+    </Menu.Items>
+  </Menu>
+);
+
+
 
 const Sidebar = ({ chats, isOpen, setIsOpen }) => {
   const [search, setSearch] = useState("");
   const [editingChatId, setEditingChatId] = useState(null);
   const [editName, setEditName] = useState("");
+  const [db, setDb] = useState(null);
+  const [auth, setAuth] = useState(null);
   const navigate = useNavigate();
+  const [isMenuOpen, setIsMenuOpen] = useState(null); // Store ID of open menu
+  const menuRefs = useRef({}); // Store refs dynamically for each chat item
+
+  const sidebarRef = useRef(null);
 
   useEffect(() => {
-    console.log(chats);
-  }, [chats]);
+      const setUpDb = async () => {
+        const { db } = await initFirebase();
+        setDb(db)
+      }
+      setUpDb()
+  }, [])
+
+  useEffect(() => {
+      const setUpAuth = async () => {
+        const { auth } = await initFirebase();
+        setAuth(auth)
+      }
+      setUpAuth()
+  }, [])
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isMenuOpen !== null && menuRefs.current[isMenuOpen] && 
+          !menuRefs.current[isMenuOpen].contains(event.target)) {
+        setIsMenuOpen(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isMenuOpen]);
+
+
+  useEffect(() => {
+    if (isMenuOpen && menuRefs.current[isMenuOpen]) {
+      const buttonRect = menuRefs.current[isMenuOpen].current.getBoundingClientRect();
+      const screenHeight = window.innerHeight;
+      const dropdownHeight = 120; // Approximate height of menu
+
+      const shouldDropUp = buttonRect.bottom + dropdownHeight > screenHeight;
+      const dropdown = menuRefs.current[isMenuOpen].current.nextElementSibling;
+
+      if (dropdown) {
+        dropdown.style.top = shouldDropUp ? "auto" : "100%";
+        dropdown.style.bottom = shouldDropUp ? "100%" : "auto";
+      }
+    }
+  }, [isMenuOpen]);
+
 
   const handleLogout = async () => {
-    console.log("here 1")
     try {
-      console.log("here")
       await signOut(auth);
       navigate("/signin");
     } catch (error) {
-      console.error("Logout failed:", error);
+      toast.error("Invalid Request");
     }
   };
 
@@ -135,13 +232,13 @@ const Sidebar = ({ chats, isOpen, setIsOpen }) => {
       </button> */}
         {isOpen && <div onClick={()=>setIsOpen(false)} className="lg:hidden w-screen h-screen z-[500] fixed top-0 opacity-[0.6] bg-[#E5E7EA]">
 
-</div>}
+        </div>}
 
       
       <div
-        className={`fixed h-full top-0 left-0 bg-gradient-to-br from-[#E5E7EA] to-[#A362A880] py-4 border-r shadow-lg w-72 transition-transform ${
+        className={`fixed h-full top-0 left-0 bg-gradient-to-br from-[#E5E7EA] to-[#A362A880] py-4 shadow-lg w-72 transition-transform ${
           isOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:w-72 lg:translate-x-0 lg:static lg:flex flex-col z-[999]`}
+        } lg:w-72 lg:translate-x-0 lg:static lg:flex flex-col z-[998]`}
       >
 
 
@@ -152,7 +249,7 @@ const Sidebar = ({ chats, isOpen, setIsOpen }) => {
             <span className="font-montserrat bg-gradient-to-r from-[#632366] to-[#44798E] bg-clip-text text-transparent ml-2 text-[24px] font-[700]">
               LEARNIFY AI
             </span>
-            <img className="lg:hidden absolute right-0" width={35} height={35} src={menuIcon} onClick={() => setIsOpen(!isOpen)}/>
+            {/* <img className="lg:hidden absolute right-0" width={35} height={35} src={menuIcon} onClick={() => setIsOpen(!isOpen)}/> */}
           </div>
 
           <div className="relative w-full max-w-sm mb-4">
@@ -174,62 +271,43 @@ const Sidebar = ({ chats, isOpen, setIsOpen }) => {
           </div>
 
           <div className="space-y-4 mt-7 px-6 h-[50vh] overflow-y-scroll z-50 relative">
-            {categoryOrder.filter(category => categorizedChats[category].length > 0).length > 0 ? (
-              categoryOrder
-                .filter(category => categorizedChats[category].length > 0)
-                .map(category => (
-                  <div key={category}>
-                    <h3 className="font-semibold text-[12px] text-gray-700">{category}</h3>
-                    <ul className="mt-2 space-y-1 text-sm text-gray-800 mb-5">
-                      {categorizedChats[category]
-                        .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
-                        .filter(chat => chat.name.toLowerCase().includes(search.toLowerCase()))
-                        .map(chat => (
-                          <li 
-                            key={chat.id} 
-                            className="flex items-center justify-between rounded-md px-1 py-1 hover:text-gray-900 cursor-pointer group hover:bg-[#63236616]"
-                          >
-                            {editingChatId === chat.id ? (
-                              <input
-                                type="text"
-                                value={editName}
-                                onChange={(e) => setEditName(e.target.value)}
-                                onKeyDown={(e) => handleKeyPress(e, chat.id)}
-                                onBlur={() => handleSave(chat.id)}
-                                className="flex-1 px-2 py-[.1rem] border-none rounded text-sm focus:outline-none focus:ring-2 bg-[#63236600] focus:ring-[#99439d]"
-                                autoFocus
-                              />
-                            ) : (
-                              <>
-                                <div 
-                                onClick={()=> handleClickLink(`/chat/${chat.id}`)}
-                                  className="flex-1 truncate"
-                                  style={{ 
-                                    display: 'block', 
-                                    whiteSpace: 'nowrap', 
-                                    overflow: 'hidden', 
-                                    textOverflow: 'ellipsis' 
-                                  }}
-                                >
-                                  {chat.name}
-                                </div>
-                                <button
-                                  onClick={() => handleEdit(chat.id, chat.name)}
-                                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:text-gray-600"
-                                >
-                                  <Edit size={16} />
-                                </button>
-                              </>
-                            )}
-                          </li>
-                        ))}
-                    </ul>
-                  </div>
-                ))
-            ) : (
-              <p className="text-gray-600 text-sm italic text-center">No recent chat history</p>
-            )}
-          </div>
+        {categoryOrder.filter(category => categorizedChats[category].length > 0).length > 0 ? (
+          categoryOrder
+            .filter(category => categorizedChats[category].length > 0)
+            .map(category => (
+              <div key={category}>
+                <h3 className="font-semibold text-[12px] text-gray-700">{category}</h3>
+                <ul ref={sidebarRef}
+                className="mt-2 space-y-1 text-sm text-gray-800 mb-5">
+                  {categorizedChats[category]
+                    .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+                    .filter(chat => chat.name.toLowerCase().includes(search.toLowerCase()))
+                    .map(chat => {
+                      if (!menuRefs.current[chat.id]) {
+                        menuRefs.current[chat.id] = React.createRef();
+                      }
+                      return (
+                        <li key={chat.id} className="relative flex items-center justify-between rounded-md px-1 py-1 hover:text-gray-900 cursor-pointer group hover:bg-[#63236616]">
+                          {editingChatId === chat.id ? (
+                            <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} onKeyDown={(e) => handleKeyPress(e, chat.id)} onBlur={() => handleSave(chat.id)} className="flex-1 px-2 py-[.1rem] border-none rounded text-sm focus:outline-none focus:ring-2 bg-[#63236600] focus:ring-[#99439d]" autoFocus />
+                          ) : (
+                            <>
+                              <div onClick={() => handleClickLink(`/chat/${chat.id}`)} className="flex-1 truncate" style={{ display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {chat.name}
+                              </div>
+                              <ChatDropdown chat={chat} onEdit={handleEdit} />
+                            </>
+                          )}
+                        </li>
+                      );
+                    })}
+                </ul>
+              </div>
+            ))
+        ) : (
+          <p className="text-gray-600 text-sm italic text-center">No recent chat history</p>
+        )}
+      </div>
 
 
         {/* logout section */}
