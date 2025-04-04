@@ -4,6 +4,9 @@ import { Send, Plus, Book, X } from "lucide-react";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { upload } from "../../api";
 import Library from './Library';
+import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
+import "react-circular-progressbar/dist/styles.css";
+
 import "./progress.css";
 
 // eslint-disable-next-line react/prop-types
@@ -132,39 +135,48 @@ const ThoughtInput = ({ onSend }) => {
       {selectedFiles.length > 0 && (
         <div className="flex flex-wrap gap-2 mt-2">
           {selectedFiles.map((file, index) => (
-            <div key={index} className="relative">
-              {file.type === "jpg" || file.type === "jpeg" || file.type === "png" || file.type === "gif" ? (
-                <img
-                  src={file.data}
-                  alt="Preview"
-                  className="w-20 h-20 object-cover rounded-md border border-gray-200"
+            <div key={index} className="relative w-20 h-20 rounded-md border border-gray-200 overflow-hidden">
+            {/* Image Preview or File Placeholder */}
+            {file.type === "jpg" || file.type === "jpeg" || file.type === "png" || file.type === "gif" ? (
+              <img
+                src={file.data}
+                alt="Preview"
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            ) : (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100">
+                <span className="text-xs text-gray-600 truncate w-full text-center">
+                  {file.name}
+                </span>
+              </div>
+            )}
+          
+            {/* Uploading Progress (Centered & Purple) */}
+            {file.uploading && (
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 inset-0 flex items-center justify-center z-10  w-10 h-10">
+                <CircularProgressbar
+                  value={file.progress}
+                  text={`${file.progress}%`}
+                  styles={buildStyles({
+                    textSize: "24px",
+                    pathColor: "#A362A8",  // Purple color
+                    textColor: "#A362A8",
+                    trailColor: "#ddd",
+                    backgroundColor: "transparent"
+                  })}
                 />
-              ) : (
-                <div className="w-20 h-20 flex flex-col items-center justify-center bg-gray-100 rounded-md border border-gray-200">
-                  <span className="text-xs text-gray-600 truncate w-full text-center">
-                    {file.name}
-                  </span>
-                </div>
-              )}
-              {file.uploading && (
-                <div className="progress-container">
-                  <svg className="progress-circle" viewBox="0 0 36 36">
-                    <path className="progress-bg" d="M18 2.084a 15.916 15.916 0 0 1 0 31.832" />
-                    <path
-                      className="progress-bar"
-                      d="M18 2.084a 15.916 15.916 0 0 1 0 31.832"
-                      strokeDasharray={`${file.progress}, 100`}
-                    />
-                  </svg>
-                  <span className="progress-text">{file.progress}%</span>
-                </div>
-              )}
-              
-                <X 
-                onClick={() => removeFile(file.name)}
-                className="absolute top-0 right-0 bg-[#4b4a4a] text-white rounded-full p-[2px] w-[0.95rem] h-[0.95rem] flex items-center justify-center text-xs hover:bg-red-600"
-                size={11}/>
-            </div>
+              </div>
+            )}
+          
+            {/* Close Icon (Top Right) */}
+            <X
+              onClick={() => removeFile(file.name)}
+              className="absolute top-1 right-1 bg-[#4b4a4a] text-white rounded-full p-[2px] w-4 h-4 flex items-center justify-center text-xs hover:bg-red-600 z-20"
+              size={11}
+            />
+          </div>
+          
+          
           ))}
         </div>
       )}

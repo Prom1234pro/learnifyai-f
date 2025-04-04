@@ -43,22 +43,23 @@ const Library = ({ selectedFiles, setSelectedFiles, togglePopup }) => {
   });
 
   const handleUpload = async () => {
+    togglePopup()
     for (const fileObj of selectedFiles) {
       if (fileObj.fileUri || fileObj.uploading) continue;
-
+      
       setSelectedFiles((prev) =>
         prev.map((f) => (f.name === fileObj.name ? { ...f, uploading: true } : f))
       );
-
+      
       let fileToUpload = fileObj.file;
       if (fileObj.type === 'pdf' && fileObj.selectedPages?.length > 0) {
         const pdfBytes = await createPdfWithSelectedPages(fileObj.file, fileObj.selectedPages);
         fileToUpload = new Blob([pdfBytes], { type: 'application/pdf' });
       }
-
+      
       const formData = new FormData();
       formData.append('file', fileToUpload, fileObj.name);
-
+      
       try {
         const fileUri = await upload(formData, (progress) => {
           setSelectedFiles((prev) =>
